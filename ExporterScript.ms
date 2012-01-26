@@ -289,14 +289,14 @@
 			OFFSET = 0
 			for obj in objects do 
 			(
-				try
-				(
+				
 				
 					if( (ClassOf obj != BoneGeometry) and (ClassOf obj != Particle_View ))then
 					(
+						tmesh = SnapShotAsMesh obj
+						
 						headerlength = 16 + (obj.name.count as integer)
 						headerlength +=8
-						
 						
 						theskin = 0
 						for i in obj.modifiers do
@@ -313,7 +313,7 @@
 						WriteLong f OFFSET
 						
 						
-						tmesh = SnapShotAsMesh obj
+						
 						num_verts = tmesh.numverts
 						num_faces = tmesh.numfaces 
 						num_tverts = getNumTVerts tmesh
@@ -366,11 +366,7 @@
 						
 						OFFSET += skinsize 
 					)--if ClassOf obj != BoneGeometry
-				)
-			catch (
-			--	format "% is skipped..\n" obj.name
-		)
-	
+					
 			)--for obj in objects do
 	
 		
@@ -407,8 +403,7 @@
 					
 				format fffd obj.name
 
-				try
-					(
+				
 						if ((ClassOf obj != BoneGeometry) and (ClassOf obj != Particle_View ) )then
 						(
 							tmesh = SnapShotAsMesh obj
@@ -417,10 +412,6 @@
 						)
 						format "  ... OK   \n"
 					) 
-					catch 
-					(
-						format " is skipped..\n"
-					)
 					
 				)
 				fclose f 
