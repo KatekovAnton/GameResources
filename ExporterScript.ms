@@ -3,8 +3,9 @@
 	
 	rollout MeshCompiller "MESH => TXT" width:180 height:145
 	(
+		
 		GroupBox grp1 "Save" pos:[4,7] width:172 height:132
-		pickbutton Pobj "Save meshes with skins" pos:[11,26] width:160 height:21
+		button Pobj "Save meshes with skins" pos:[11,26] width:160 height:21
 		progressBar Sprog "" pos:[11,119] width:154 height:14 
 		--#####################################################################--
 		fn save f =		(	) 
@@ -168,7 +169,7 @@
 	 	--####################################################################--
  		fn savemesh tmesh out_file = 
 		(
-			print "<<<<<<<Saving mesh...>>>>>>>"
+			format "\tSaving:     "
 			
 			num_verts = tmesh.numverts
 			num_faces = tmesh.numfaces 
@@ -177,7 +178,9 @@
 			WriteLong out_file num_faces
 			WriteLong out_file num_tverts
 			
-			print ">>>>>>>Verts saving...<<<<<<<" --מעקוע ג Lister
+			
+			format "\t> Verts: %          " num_verts
+			
 
 			for v=1 to num_verts do
 			(
@@ -197,7 +200,9 @@
 
 				Sprog.value = v*100/num_verts
 			)
-			print ">>>>>>>Faces saving...<<<<<<<"
+			
+			format "\t> Faces: %          " num_faces
+					
 			for f = 1 to num_tverts do
 			(
 				tvert = getTVert tmesh f
@@ -222,7 +227,6 @@
 		fn saveSSskin obj out_file = 
 		(
 			
-			print "<<<<<<<Saving skin....>>>>>>>"
 			theskin = 0
 
 			for i in obj.modifiers do
@@ -230,10 +234,12 @@
 				if classof(i)==Skin then
 				(
 					theskin =  i
+					format "> Skin...\n"
 					exit
 				)
 			)
 			max modify mode
+			
 			
 			
 			if(theskin !=0) then
@@ -283,83 +289,91 @@
 			OFFSET = 0
 			for obj in objects do 
 			(
-				
-				
-				if( (ClassOf obj != BoneGeometry) and (ClassOf obj != Particle_View ))then
+				try
 				(
-					headerlength = 16 + (obj.name.count as integer)
-					headerlength +=8
-					
-					
-					theskin = 0
-					for i in obj.modifiers do
+				
+					if( (ClassOf obj != BoneGeometry) and (ClassOf obj != Particle_View ))then
 					(
-						if classof(i)==Skin then
+						headerlength = 16 + (obj.name.count as integer)
+						headerlength +=8
+						
+						
+						theskin = 0
+						for i in obj.modifiers do
 						(
-							theskin =  i
-							exit
-						)
-					)
-					
-					max modify mode
-					PLZwritestring f (obj.name as string)
-					WriteLong f OFFSET
-					
-					
-					tmesh = SnapShotAsMesh obj
-					num_verts = tmesh.numverts
-					num_faces = tmesh.numfaces 
-					num_tverts = getNumTVerts tmesh
-					OFFSET += 12
-					OFFSET += num_verts*24
-					OFFSET += num_tverts*8
-					OFFSET += num_faces*24
-					skinsize = 0;
-					if(theskin !=0) then
-					(
-						modPanel.setCurrentObject theskin
-						skinsize += 8
-
-						for ivert = 1 to (SkinOps.GetNumberVertices theskin) do
-						(	
-							vwc = skinOps.GetVertexWeightCount theskin ivert
-							Count = vwc as integer
-							for ivertbone = 1 to (vwc) do
+							if classof(i)==Skin then
 							(
-								Tweight = skinOps.GetVertexWeight theskin ivert ivertbone
-								if Tweight <0.1 then
-									Count = Count-1
+								theskin =  i
+								exit
 							)
-							skinsize += 4
-							for ivertbone = 1 to (vwc) do
-							(
-								bone_id = skinOps.GetBoneName theskin (skinOps.getVertexWeightBoneID theskin ivert ivertbone) 0
-								weight = skinOps.GetVertexWeight theskin ivert ivertbone
-								if weight >0.1 then
+						)
+						
+						max modify mode
+						PLZwritestring f (obj.name as string)
+						WriteLong f OFFSET
+						
+						
+						tmesh = SnapShotAsMesh obj
+						num_verts = tmesh.numverts
+						num_faces = tmesh.numfaces 
+						num_tverts = getNumTVerts tmesh
+						OFFSET += 12
+						OFFSET += num_verts*24
+						OFFSET += num_tverts*8
+						OFFSET += num_faces*24
+						skinsize = 0;
+						if(theskin !=0) then
+						(
+							modPanel.setCurrentObject theskin
+							skinsize += 8
+
+							for ivert = 1 to (SkinOps.GetNumberVertices theskin) do
+							(	
+								vwc = skinOps.GetVertexWeightCount theskin ivert
+								Count = vwc as integer
+								for ivertbone = 1 to (vwc) do
 								(
-									skinsize += 8
-									bname = bone_id as string;
-									skinsize += bname.count+1
+									Tweight = skinOps.GetVertexWeight theskin ivert ivertbone
+									if Tweight <0.1 then
+										Count = Count-1
+								)
+								skinsize += 4
+								for ivertbone = 1 to (vwc) do
+								(
+									bone_id = skinOps.GetBoneName theskin (skinOps.getVertexWeightBoneID theskin ivert ivertbone) 0
+									weight = skinOps.GetVertexWeight theskin ivert ivertbone
+									if weight >0.1 then
+									(
+										skinsize += 8
+										bname = bone_id as string;
+										skinsize += bname.count+1
+									)
 								)
 							)
 						)
-					)
-					else
-					(
-						skinsize += 8
-					)--if(theskin !=0)
---###############################################################
-					
-					WriteLong f 0
-					WriteLong f headerlength 
-					WriteLong f 1
-					WriteLong f skinsize 
-					WriteLong f 0
---###############################################################
-					
-					OFFSET += skinsize 
-				)--if ClassOf obj != BoneGeometry
+						else
+						(
+							skinsize += 8
+						)--if(theskin !=0)
+	--###############################################################
+						
+						WriteLong f 0
+						WriteLong f headerlength 
+						WriteLong f 1
+						WriteLong f skinsize 
+						WriteLong f 0
+	--###############################################################
+						
+						OFFSET += skinsize 
+					)--if ClassOf obj != BoneGeometry
+				)
+			catch (
+			--	format "% is skipped..\n" obj.name
+		)
+	
 			)--for obj in objects do
+	
+		
 		)--fn writeshapka
 		--####################################################################--
 		fn proceedallsubsets = 
@@ -368,7 +382,6 @@
 			filename = getSaveFileName caption:"Export mesh"
 			if filename!=undefined then
 			(
-
 				f=fopen filename "wb" 
 				objcount = 0
 				for obj in objects do 
@@ -386,15 +399,29 @@
 				
 				for obj in objects do
 				(
-				print obj.name
+				fffd = "\t%\t"
+				format "%" (ClassOf obj)
+					if (obj.name.count<4) then fffd = fffd+"\t"
+					if (obj.name.count<=11) then fffd = fffd+"\t"
+					if (obj.name.count<8) then fffd = fffd+"\t"
+					
+				format fffd obj.name
 
-				print (ClassOf obj)
-					if ((ClassOf obj != BoneGeometry) and (ClassOf obj != Particle_View ) )then
+				try
 					(
-						tmesh = SnapShotAsMesh obj
-						savemesh tmesh f
-						saveSSskin obj f
+						if ((ClassOf obj != BoneGeometry) and (ClassOf obj != Particle_View ) )then
+						(
+							tmesh = SnapShotAsMesh obj
+							savemesh tmesh f
+							saveSSskin obj f
+						)
+						format "  ... OK   \n"
+					) 
+					catch 
+					(
+						format " is skipped..\n"
 					)
+					
 				)
 				fclose f 
 			)
@@ -403,12 +430,18 @@
 		button btn4 "Save animation" pos:[10,60] width:160 height:21
 		
 		on MeshCompiller open do
-		(		)
+		(		clearListener() )
 		
-		on Pobj picked obj do
+		on Pobj pressed do
 		(
 			--FindBones()
+			print "################################################################################################################################"
+			print "                                                                Begin Saving...."
+			print "################################################################################################################################\n"
 			proceedallsubsets()
+			print "\n################################################################################################################################"
+			print "                                                           All Saving Succesfully!!!"
+			print "################################################################################################################################\n\n\n\n"
 		)
 		on btn4 pressed  do
 		(
